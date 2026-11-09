@@ -112,7 +112,7 @@ export default function Gallery() {
           <i className="fa-solid fa-arrow-left" /> Back
         </a>
         <div className="g-title">
-          <h2>Beach Memories</h2>
+          <h2>Memories with Dan & Waine</h2>
           <p>{items ? `${total} moment${total === 1 ? "" : "s"}` : "\u00a0"}</p>
         </div>
         <span />
