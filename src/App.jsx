@@ -6,6 +6,12 @@ const WAVES = [
   { cls: "wave-3", d: "M0,30 C150,70 450,-10 700,50 C950,110 1100,30 1200,50 L1200,120 L0,120 Z" },
 ];
 
+const MAX_BYTES = 150 * 1024 * 1024; // Dropbox upload-link limit per file
+const isMedia = (f) =>
+  f.type.startsWith("image/") ||
+  f.type.startsWith("video/") ||
+  /\.(heic|heif|jpe?g|png|webp|gif|mp4|mov|m4v|webm)$/i.test(f.name);
+
 export default function App() {
   const inputRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -14,6 +20,7 @@ export default function App() {
   const [status, setStatus] = useState("idle"); // idle | uploading | done | partial
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [result, setResult] = useState({ saved: 0, failed: 0 });
+  const [tooBig, setTooBig] = useState(0);
 
   const uploading = status === "uploading";
 
@@ -21,6 +28,7 @@ export default function App() {
     if (uploading) return;
     setOpen(false);
     setFiles([]);
+    setTooBig(0);
     setStatus("idle");
   }
 
@@ -31,9 +39,11 @@ export default function App() {
   });
 
   function addFiles(list) {
-    const images = Array.from(list).filter((f) => f.type.startsWith("image/"));
-    if (!images.length) return;
-    setFiles((prev) => [...prev, ...images]);
+    const media = Array.from(list).filter(isMedia);
+    const ok = media.filter((f) => f.size <= MAX_BYTES);
+    setTooBig(media.length - ok.length);
+    if (!ok.length) return;
+    setFiles((prev) => [...prev, ...ok]);
     setStatus("idle");
   }
 
@@ -110,7 +120,7 @@ export default function App() {
           </button>
         </div>
 
-        <p className="footnote">Share photos from our seaside getaway</p>
+        <p className="footnote">Share photos &amp; videos from our seaside getaway</p>
       </main>
 
       <footer className="bottom">
@@ -145,7 +155,7 @@ export default function App() {
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             hidden
             onChange={(e) => {
@@ -177,16 +187,16 @@ export default function App() {
             <div className="drop-icon">
               <i className="fa-solid fa-images" />
             </div>
-            <p className="drop-title">Tap to choose photos</p>
+            <p className="drop-title">Tap to choose photos or videos</p>
             <p className="drop-sub">or drag &amp; drop them here</p>
-            <span className="pill">JPG, PNG, HEIC</span>
+            <span className="pill">JPG, PNG, HEIC, MP4, MOV &bull; up to 150 MB each</span>
           </div>
 
           {files.length > 0 && (
             <ul className="files">
               {files.map((f, i) => (
                 <li key={`${f.name}-${i}`}>
-                  <i className="fa-regular fa-image" />
+                  <i className={f.type.startsWith("video/") ? "fa-solid fa-film" : "fa-regular fa-image"} />
                   <span className="fname">{f.name}</span>
                   {!uploading && (
                     <button onClick={() => removeFile(i)} aria-label={`Remove ${f.name}`}>
@@ -196,6 +206,16 @@ export default function App() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {tooBig > 0 && (
+            <div className="note warn">
+              <i className="fa-solid fa-triangle-exclamation" />
+              <p className="note-title">
+                {tooBig} file{tooBig > 1 ? "s were" : " was"} too large
+              </p>
+              <p className="note-sub">Each photo or video can be up to 150 MB.</p>
+            </div>
           )}
 
           <div role="status" aria-live="polite">
