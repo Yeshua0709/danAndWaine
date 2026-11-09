@@ -52,10 +52,22 @@ export default function App() {
     // One at a time, so a single bad file doesn't sink the batch.
     for (let i = 0; i < batch.length; i++) {
       try {
-        const body = new FormData();
-        body.append("photo", batch[i]);
-        const res = await fetch("/api/upload", { method: "POST", body });
-        if (!res.ok) throw new Error("Upload failed");
+        // 1) Ask our server for a one-time Dropbox upload link
+        const linkRes = await fetch("/api/upload-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: batch[i].name }),
+        });
+        if (!linkRes.ok) throw new Error("No upload link");
+        const { link } = await linkRes.json();
+
+        // 2) Send the photo straight to Dropbox (skips Vercel's 4.5 MB limit)
+        const upRes = await fetch(link, {
+          method: "POST",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: batch[i],
+        });
+        if (!upRes.ok) throw new Error("Upload failed");
       } catch {
         failed.push(batch[i]);
       }
@@ -74,7 +86,7 @@ export default function App() {
       <header className="top">
         <div className="top-left">
           <i className="fa-solid fa-umbrella-beach" />
-          <span>Dan&Waine</span>
+          <span>Est. 2024</span>
         </div>
         <div className="top-right">Shoreline Collection</div>
       </header>
@@ -102,7 +114,7 @@ export default function App() {
       </main>
 
       <footer className="bottom">
-        <p>&copy; Dan &amp; Waine</p>
+        <p>&copy; Dan &amp; Waine &bull; Soft Waves &amp; Golden Sands</p>
       </footer>
 
       <div className="waves" aria-hidden="true">
