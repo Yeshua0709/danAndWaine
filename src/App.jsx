@@ -96,7 +96,7 @@ export default function App() {
       <header className="top">
         <div className="top-left">
           <i className="fa-solid fa-umbrella-beach" />
-          <span>Est. 2024</span>
+          <span>Dan&Waine</span>
         </div>
         <div className="top-right">Shoreline Collection</div>
       </header>
@@ -124,7 +124,7 @@ export default function App() {
       </main>
 
       <footer className="bottom">
-        <p>&copy; Dan &amp; Waine &bull; Soft Waves &amp; Golden Sands</p>
+        <p>&copy; Dan &amp; Waine </p>
       </footer>
 
       <div className="waves" aria-hidden="true">
